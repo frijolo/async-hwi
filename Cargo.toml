@@ -20,13 +20,17 @@ repository.workspace = true
 
 [features]
 default = ["ledger", "specter", "coldcard", "bitbox", "jade", "service"]
-bitbox = ["tokio", "hidapi", "bitbox-api", "regex"]
+# Transport-agnostic BitBox02 support — compiles on all platforms including Android.
+# Provides BitBox02<T>::from(PairedBitBox<T>), register_wallet, sign_tx, get_extended_pubkey, etc.
+bitbox = ["tokio", "dep:bitbox-api", "bitbox-api/tokio", "bitbox-api/multithreaded", "regex"]
+# Adds USB HID enumeration & pairing (desktop only). Requires hidapi.
+bitbox-usb = ["bitbox", "dep:hidapi", "bitbox-api/usb"]
 coldcard = ["dep:coldcard", "regex"]
 specter = ["tokio", "tokio-serial", "serialport"]
 jade = ["tokio", "tokio-serial", "serde", "serde_bytes", "serde_cbor", "serialport", "reqwest"]
-ledger = ["regex", "tokio", "ledger_bitcoin_client", "ledger-transport-hidapi", "ledger-apdu", "hidapi"]
+ledger = ["regex", "tokio", "ledger_bitcoin_client", "ledger-transport-hidapi", "ledger-apdu", "dep:hidapi"]
 regex = ["dep:regex"]
-service = ["bitbox", "coldcard", "jade", "ledger", "specter", "tracing", "hex", "crossbeam"]
+service = ["bitbox-usb", "coldcard", "jade", "ledger", "specter", "tracing", "hex", "crossbeam"]
 
 [dependencies]
 async-trait = "0.1.52"
@@ -43,8 +47,8 @@ serde_bytes = { version = "0.11.14", optional = true }
 serde_cbor = { version = "0.11", optional = true }
 reqwest = { version = "0.11", default-features = false, features = ["json", "rustls-tls"] , optional = true}
 
-# bitbox
-bitbox-api = { version = "0.9.0", default-features = false, features = ["usb", "tokio", "multithreaded", "simulator"], optional = true }
+# bitbox — base features only; "usb" is added by bitbox-usb feature
+bitbox-api = { version = "0.9.0", default-features = false, features = ["tokio", "multithreaded"], optional = true }
 
 # coldcard
 coldcard = { version = "0.12.2", optional = true }

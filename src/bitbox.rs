@@ -5,9 +5,10 @@ use bitbox_api::{
     btc::KeyOriginInfo,
     error::{BitBoxError, Error},
     pb::{self, BtcScriptConfig},
-    usb::UsbError,
-    Keypath, PairedBitBox, PairingBitBox,
+    Keypath, PairedBitBox,
 };
+#[cfg(feature = "bitbox-usb")]
+use bitbox_api::usb::UsbError;
 use bitcoin::{
     bip32::{ChildNumber, DerivationPath, Fingerprint, Xpub},
     psbt::Psbt,
@@ -18,12 +19,9 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-pub use bitbox_api::{
-    self as api,
-    runtime::Runtime,
-    usb::{get_any_bitbox02, is_bitbox02},
-    ConfigError, NoiseConfig, NoiseConfigData, NoiseConfigNoCache,
-};
+pub use bitbox_api::{self as api, runtime::Runtime, ConfigError, NoiseConfig, NoiseConfigData, NoiseConfigNoCache};
+#[cfg(feature = "bitbox-usb")]
+pub use bitbox_api::usb::{get_any_bitbox02, is_bitbox02};
 
 #[derive(Clone)]
 struct Cache(Arc<Mutex<Option<NoiseConfigData>>>);
@@ -46,11 +44,13 @@ impl NoiseConfig for Cache {
     }
 }
 
+#[cfg(feature = "bitbox-usb")]
 pub struct PairingBitbox02WithLocalCache<T: Runtime> {
     client: PairingBitBox<T>,
     local_cache: Cache,
 }
 
+#[cfg(feature = "bitbox-usb")]
 impl<T: Runtime> PairingBitbox02WithLocalCache<T> {
     pub async fn connect(
         device: hidapi::HidDevice,
@@ -90,10 +90,12 @@ impl<T: Runtime> PairingBitbox02WithLocalCache<T> {
     }
 }
 
+#[cfg(feature = "bitbox-usb")]
 pub struct PairingBitbox02<T: Runtime> {
     client: PairingBitBox<T>,
 }
 
+#[cfg(feature = "bitbox-usb")]
 impl<T: Runtime> PairingBitbox02<T> {
     pub async fn connect(
         device: hidapi::HidDevice,
@@ -359,6 +361,7 @@ fn coin_from_network(network: bitcoin::Network) -> pb::BtcCoin {
     }
 }
 
+#[cfg(feature = "bitbox-usb")]
 impl From<UsbError> for HWIError {
     fn from(value: UsbError) -> Self {
         HWIError::Device(value.to_string())
